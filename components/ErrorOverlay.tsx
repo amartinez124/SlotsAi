@@ -28,6 +28,18 @@ export function ErrorOverlay({
   return (
     <div className="pointer-events-none absolute inset-0 z-10 flex h-full w-full flex-col justify-center rounded-[inherit] bg-white/85 p-6 text-center backdrop-blur dark:bg-slate-900/90">
       <div className="pointer-events-auto mx-auto w-full max-w-md rounded-xl bg-white px-6 py-4 text-lg font-medium text-slate-700 dark:bg-transparent dark:text-slate-100">
+        {/* Logo with loading spinner */}
+        <div className="mb-4 flex justify-center">
+          <div className="relative inline-flex items-center justify-center p-3">
+            <img 
+              src="/logo.webp" 
+              alt="Logo" 
+              className="w-16 h-16 object-contain"
+            />
+            {/* Spinning border around logo with more space */}
+            <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#D9B282] animate-spin"></div>
+          </div>
+        </div>
         <div>{content}</div>
         {error && onRetry ? (
           <button

@@ -8,6 +8,7 @@ import {
   GREETING,
   CREATE_SESSION_ENDPOINT,
   WORKFLOW_ID,
+  COMPOSER_TOOLS,
   getThemeConfig,
 } from "@/lib/config";
 import { ErrorOverlay } from "./ErrorOverlay";
@@ -61,6 +62,7 @@ export function ChatKitPanel({
       : "pending"
   );
   const [widgetInstanceKey, setWidgetInstanceKey] = useState(0);
+  const [hasStartedChat, setHasStartedChat] = useState(false);
 
   const setErrorState = useCallback((updates: Partial<ErrorState>) => {
     setErrors((current) => ({ ...current, ...updates }));
@@ -155,6 +157,7 @@ export function ChatKitPanel({
     setIsInitializingSession(true);
     setErrors(createInitialErrors());
     setWidgetInstanceKey((prev) => prev + 1);
+    setHasStartedChat(false);
   }, []);
 
   const getClientSecret = useCallback(
@@ -264,7 +267,7 @@ export function ChatKitPanel({
   const chatkit = useChatKit({
     api: { getClientSecret },
     theme: {
-      colorScheme: theme,
+      colorScheme: "dark", // Always use dark theme with custom colors
       ...getThemeConfig(theme),
     },
     startScreen: {
@@ -274,9 +277,11 @@ export function ChatKitPanel({
     composer: {
       placeholder: PLACEHOLDER_INPUT,
       attachments: {
-        // Enable attachments
         enabled: true,
+        maxCount: 5,
+        maxSize: 10485760, // 10MB
       },
+      tools: COMPOSER_TOOLS,
     },
     threadItemActions: {
       feedback: false,
@@ -317,11 +322,16 @@ export function ChatKitPanel({
     onResponseEnd: () => {
       onResponseEnd();
     },
+    onRequestStart: () => {
+      setHasStartedChat(true);
+    },
     onResponseStart: () => {
       setErrorState({ integration: null, retryable: false });
+      setHasStartedChat(true);
     },
     onThreadChange: () => {
       processedFacts.current.clear();
+      setHasStartedChat(false);
     },
     onError: ({ error }: { error: unknown }) => {
       // Note that Chatkit UI handles errors for your users.
