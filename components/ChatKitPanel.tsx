@@ -322,9 +322,6 @@ export function ChatKitPanel({
     onResponseEnd: () => {
       onResponseEnd();
     },
-    onRequestStart: () => {
-      setHasStartedChat(true);
-    },
     onResponseStart: () => {
       setErrorState({ integration: null, retryable: false });
       setHasStartedChat(true);
