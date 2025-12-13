@@ -3,13 +3,13 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Chuk AI",
-  description: "Chuk AI - Powered by ChatKit",
+  title: "agentkit Amazing",
+  description: "agentkit Amazing - Powered by ChatKit",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Chuk AI",
+    title: "AgentKit",
   },
 };
 
@@ -29,7 +29,7 @@ export default function RootLayout({
           src="https://cdn.platform.openai.com/deployments/chatkit/chatkit.js"
           strategy="beforeInteractive"
         />
-        <link rel="apple-touch-icon" href="/icon-192x192.webp" />
+        <link rel="apple-touch-icon" href="/logo.webp" />
       </head>
       <body className="antialiased">{children}</body>
     </html>

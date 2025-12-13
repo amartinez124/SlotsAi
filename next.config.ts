@@ -15,7 +15,4 @@ export default withPWA({
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === "development",
-  buildExcludes: [/middleware-manifest\.json$/],
-  cacheOnFrontEndNav: true,
-  reloadOnOnline: true,
 })(nextConfig as any);
