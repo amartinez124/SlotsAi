@@ -49,10 +49,15 @@ export const getThemeConfig = (theme: ColorScheme): ThemeOption => ({
       primary: "#D9B282",
       level: 1,
     },
-    surface: {
-      background: "#14192B",
-      foreground: "#030307",
-    },
+    surface: theme === "dark" 
+      ? {
+          background: "#14192B",
+          foreground: "#030307",
+        }
+      : {
+          background: "#FFFFFF",
+          foreground: "#F5F5F5",
+        },
   },
   radius: "round",
   density: "spacious",

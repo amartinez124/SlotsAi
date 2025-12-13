@@ -3,13 +3,13 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "agentkit Amazing",
-  description: "agentkit Amazing - Powered by ChatKit",
+  title: "Chuk AI",
+  description: "Chuk AI - Powered by ChatKit",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "AgentKit",
+    title: "Chuk AI",
   },
 };
 

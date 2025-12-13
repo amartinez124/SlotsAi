@@ -267,7 +267,7 @@ export function ChatKitPanel({
   const chatkit = useChatKit({
     api: { getClientSecret },
     theme: {
-      colorScheme: "dark", // Always use dark theme with custom colors
+      colorScheme: theme, // Use the actual theme prop
       ...getThemeConfig(theme),
     },
     startScreen: {
@@ -351,7 +351,7 @@ export function ChatKitPanel({
   }
 
   return (
-    <div className="relative pb-8 flex h-[90vh] w-full rounded-2xl flex-col overflow-hidden bg-white shadow-sm transition-colors dark:bg-slate-900">
+    <div className="relative flex h-full w-full flex-col overflow-hidden bg-white transition-colors dark:bg-slate-900">
       <ChatKit
         key={widgetInstanceKey}
         control={chatkit.control}
@@ -366,7 +366,7 @@ export function ChatKitPanel({
         fallbackMessage={
           blockingError || !isInitializingSession
             ? null
-            : "Loading assistant session..."
+            : "Loading agent session..."
         }
         onRetry={blockingError && errors.retryable ? handleResetChat : null}
         retryLabel="Restart chat"
