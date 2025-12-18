@@ -1,7 +1,7 @@
 {
   "name": "Chukchansi AI",
   "short_name": "Chukchansi AI",
-  "description": "Chukchansi AI - Powered by OpenAI",
+  "description": "Chukchansi AI",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
