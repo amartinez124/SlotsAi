@@ -9,25 +9,25 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/app-icon-192.webp",
+      "src": "/app-icon-black-192.webp",
       "sizes": "192x192",
       "type": "image/webp",
       "purpose": "any"
     },
     {
-      "src": "/app-icon-512.webp",
+      "src": "/app-icon-black-512.webp",
       "sizes": "512x512",
       "type": "image/webp",
       "purpose": "any"
     },
     {
-      "src": "/app-icon-192.webp",
+      "src": "/app-icon-black-192.webp",
       "sizes": "192x192",
       "type": "image/webp",
       "purpose": "maskable"
     },
     {
-      "src": "/app-icon-512.webp",
+      "src": "/app-icon-black-512.webp",
       "sizes": "512x512",
       "type": "image/webp",
       "purpose": "maskable"

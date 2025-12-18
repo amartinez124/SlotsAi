@@ -12,8 +12,8 @@ export const metadata: Metadata = {
     title: "Chukchansi AI",
   },
   icons: {
-    icon: "/app-icon-192.webp",
-    apple: "/app-icon-192.webp",
+    icon: "/app-icon-black-192.webp",
+    apple: "/app-icon-black-192.webp",
   },
 };
 
@@ -33,7 +33,7 @@ export default function RootLayout({
           src="https://cdn.platform.openai.com/deployments/chatkit/chatkit.js"
           strategy="beforeInteractive"
         />
-        <link rel="apple-touch-icon" href="/app-icon-192.webp" />
+        <link rel="apple-touch-icon" href="/app-icon-black-192.webp" />
       </head>
       <body className="antialiased">{children}</body>
     </html>

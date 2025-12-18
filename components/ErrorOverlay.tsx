@@ -32,7 +32,7 @@ export function ErrorOverlay({
         <div className="mb-4 flex justify-center">
           <div className="relative inline-flex items-center justify-center p-3">
             <img 
-              src="/logo.webp" 
+              src="/app-icon.webp" 
               alt="Logo" 
               className="w-16 h-16 object-contain"
             />
