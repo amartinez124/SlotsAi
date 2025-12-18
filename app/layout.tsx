@@ -3,13 +3,13 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Chuk AI",
-  description: "Chuk AI - Powered by ChatKit",
+  title: "Chukchansi AI",
+  description: "Chukchansi AI",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Chuk AI",
+    title: "Chukchansi AI",
   },
 };
 
