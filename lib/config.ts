@@ -28,7 +28,7 @@ export const STARTER_PROMPTS: StartScreenPrompt[] = [
   },
 ];
 
-export const PLACEHOLDER_INPUT = "Message with Chuk AI";
+export const PLACEHOLDER_INPUT = "Message Chukchansi AI";
 
 export const GREETING = "";
 
