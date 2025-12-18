@@ -43,6 +43,8 @@ export const COMPOSER_TOOLS = [
   },
 ];
 
+export const SPEECH_RECOGNITION_LANGUAGE = 'en-US';
+
 export const getThemeConfig = (theme: ColorScheme): ThemeOption => ({
   color: {
     accent: {

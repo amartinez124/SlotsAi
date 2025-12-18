@@ -10,9 +10,13 @@ import {
   WORKFLOW_ID,
   COMPOSER_TOOLS,
   getThemeConfig,
+  SPEECH_RECOGNITION_LANGUAGE,
 } from "@/lib/config";
 import { ErrorOverlay } from "./ErrorOverlay";
 import type { ColorScheme } from "@/hooks/useColorScheme";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
+import { useAudioVisualizer } from "@/hooks/useAudioVisualizer";
+import { MicrophoneButton } from "./MicrophoneButton";
 
 export type FactAction = {
   type: "save";
@@ -64,9 +68,45 @@ export function ChatKitPanel({
   const [widgetInstanceKey, setWidgetInstanceKey] = useState(0);
   const [hasStartedChat, setHasStartedChat] = useState(false);
 
+  // Speech recognition state
+  const [accumulatedTranscript, setAccumulatedTranscript] = useState("");
+  const [interimTranscript, setInterimTranscript] = useState("");
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+
   const setErrorState = useCallback((updates: Partial<ErrorState>) => {
     setErrors((current) => ({ ...current, ...updates }));
   }, []);
+
+  // Audio visualizer hook
+  const { audioData, startVisualization, stopVisualization } = useAudioVisualizer();
+
+  // Speech recognition hook
+  const {
+    isListening,
+    isSupported: isSpeechSupported,
+    toggleListening,
+  } = useSpeechRecognition({
+    onTranscript: (text, isFinal) => {
+      if (isFinal) {
+        // Accumulate final transcripts
+        setAccumulatedTranscript((prev) => (prev ? prev + " " + text : text));
+        setInterimTranscript("");
+      } else {
+        // Show interim transcript
+        setInterimTranscript(text);
+      }
+    },
+    onError: (error) => {
+      setVoiceError(error);
+      setTimeout(() => setVoiceError(null), 5000);
+    },
+    onStreamReady: (stream) => {
+      // Start audio visualization when stream is ready
+      startVisualization(stream);
+    },
+    language: SPEECH_RECOGNITION_LANGUAGE,
+    continuous: true,
+  });
 
   useEffect(() => {
     return () => {
@@ -337,6 +377,19 @@ export function ChatKitPanel({
     },
   });
 
+  // Handle stopping recording and sending message
+  useEffect(() => {
+    if (!isListening && accumulatedTranscript && chatkit.sendUserMessage) {
+      // Send the accumulated transcript to ChatKit
+      chatkit.sendUserMessage({ text: accumulatedTranscript.trim() });
+      
+      // Clean up
+      setAccumulatedTranscript("");
+      setInterimTranscript("");
+      stopVisualization();
+    }
+  }, [isListening, accumulatedTranscript, chatkit, stopVisualization]);
+
   const activeError = errors.session ?? errors.integration;
   const blockingError = errors.script ?? activeError;
 
@@ -361,6 +414,27 @@ export function ChatKitPanel({
             : "block h-full w-full"
         }
       />
+      
+      {/* Microphone Button with Waveform - Positioned inline with chat composer */}
+      {isSpeechSupported && !blockingError && !isInitializingSession && (
+        <div className="absolute bottom-6 left-6 z-10">
+          <MicrophoneButton
+            isListening={isListening}
+            isSupported={isSpeechSupported}
+            onClick={toggleListening}
+            interimTranscript={interimTranscript}
+            audioData={audioData}
+          />
+        </div>
+      )}
+      
+      {/* Voice Error Toast */}
+      {voiceError && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-20 max-w-md">
+          {voiceError}
+        </div>
+      )}
+      
       <ErrorOverlay
         error={blockingError}
         fallbackMessage={
