@@ -14,8 +14,6 @@ import {
 } from "@/lib/config";
 import { ErrorOverlay } from "./ErrorOverlay";
 import type { ColorScheme } from "@/hooks/useColorScheme";
-import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
-import { MicrophoneButton } from "./MicrophoneButton";
 
 export type FactAction = {
   type: "save";
@@ -65,52 +63,20 @@ export function ChatKitPanel({
       : "pending"
   );
   const [widgetInstanceKey, setWidgetInstanceKey] = useState(0);
-  const [hasStartedChat, setHasStartedChat] = useState(false);
 
-  // Speech recognition state
-  const [accumulatedTranscript, setAccumulatedTranscript] = useState("");
-  const [interimTranscript, setInterimTranscript] = useState("");
+  // Voice recognition state
+  const [isListening, setIsListening] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const fullTranscriptRef = useRef<string>("");
 
   const setErrorState = useCallback((updates: Partial<ErrorState>) => {
     setErrors((current) => ({ ...current, ...updates }));
   }, []);
 
-  // Speech recognition hook
-  const {
-    isListening,
-    isSupported: isSpeechSupported,
-    toggleListening,
-  } = useSpeechRecognition({
-    onTranscript: (text, isFinal) => {
-      if (isFinal) {
-        // Accumulate final transcripts
-        setAccumulatedTranscript((prev) => (prev ? prev + " " + text : text));
-        setInterimTranscript("");
-        
-        // Update composer with accumulated text in real-time
-        if (chatkit.setComposerValue) {
-          const fullText = accumulatedTranscript ? accumulatedTranscript + " " + text : text;
-          chatkit.setComposerValue({ text: fullText.trim() });
-        }
-      } else {
-        // Show interim transcript and update composer
-        setInterimTranscript(text);
-        
-        // Update composer with interim text in real-time
-        if (chatkit.setComposerValue) {
-          const fullText = accumulatedTranscript ? accumulatedTranscript + " " + text : text;
-          chatkit.setComposerValue({ text: fullText.trim() });
-        }
-      }
-    },
-    onError: (error) => {
-      setVoiceError(error);
-      setTimeout(() => setVoiceError(null), 5000);
-    },
-    language: SPEECH_RECOGNITION_LANGUAGE,
-    continuous: true,
-  });
+  // Check if speech recognition is supported
+  const isSpeechSupported = typeof window !== 'undefined' && 
+    ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
   useEffect(() => {
     return () => {
@@ -201,7 +167,6 @@ export function ChatKitPanel({
     setIsInitializingSession(true);
     setErrors(createInitialErrors());
     setWidgetInstanceKey((prev) => prev + 1);
-    setHasStartedChat(false);
   }, []);
 
   const getClientSecret = useCallback(
@@ -368,11 +333,9 @@ export function ChatKitPanel({
     },
     onResponseStart: () => {
       setErrorState({ integration: null, retryable: false });
-      setHasStartedChat(true);
     },
     onThreadChange: () => {
       processedFacts.current.clear();
-      setHasStartedChat(false);
     },
     onError: ({ error }: { error: unknown }) => {
       // Note that Chatkit UI handles errors for your users.
@@ -381,19 +344,86 @@ export function ChatKitPanel({
     },
   });
 
-  // Handle stopping recording
+  // Initialize speech recognition
   useEffect(() => {
-    if (!isListening && accumulatedTranscript) {
-      // Focus the composer so user can immediately edit or send
+    if (!isSpeechSupported) return;
+
+    const SpeechRecognitionAPI = window.SpeechRecognition || (window as typeof window & { webkitSpeechRecognition: typeof window.SpeechRecognition }).webkitSpeechRecognition;
+    const recognition = new SpeechRecognitionAPI();
+    
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = SPEECH_RECOGNITION_LANGUAGE;
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let interimTranscript = '';
+      let finalTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + ' ';
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+
+      // Update full transcript
+      if (finalTranscript) {
+        fullTranscriptRef.current += finalTranscript;
+      }
+
+      // Update composer in real-time
+      const currentText = fullTranscriptRef.current + interimTranscript;
+      if (currentText && chatkit.setComposerValue) {
+        chatkit.setComposerValue({ text: currentText.trim() });
+      }
+    };
+
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      if (event.error !== 'no-speech' && event.error !== 'aborted') {
+        console.error('Speech recognition error:', event.error);
+        setVoiceError('Speech recognition error. Please try again.');
+        setTimeout(() => setVoiceError(null), 3000);
+      }
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, [isSpeechSupported, chatkit]);
+
+  // Toggle listening function
+  const toggleListening = useCallback(() => {
+    if (!recognitionRef.current) return;
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
       if (chatkit.focusComposer) {
         chatkit.focusComposer();
       }
-      
-      // Clean up
-      setAccumulatedTranscript("");
-      setInterimTranscript("");
+    } else {
+      fullTranscriptRef.current = '';
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (error) {
+        console.error('Error starting recognition:', error);
+        setVoiceError('Failed to start voice recognition.');
+        setTimeout(() => setVoiceError(null), 3000);
+      }
     }
-  }, [isListening, accumulatedTranscript, chatkit]);
+  }, [isListening, chatkit]);
 
   const activeError = errors.session ?? errors.integration;
   const blockingError = errors.script ?? activeError;
@@ -422,7 +452,7 @@ export function ChatKitPanel({
       
       {/* Microphone Button - Next to send button */}
       {isSpeechSupported && !blockingError && !isInitializingSession && (
-        <div className="absolute bottom-5.5 right-16 z-10">
+        <div className="absolute bottom-6 right-16 z-10">
           <button
             onClick={toggleListening}
             className="flex items-center justify-center w-10 h-10 rounded-xl transition-all group hover:bg-white/10 dark:hover:bg-white/10"
