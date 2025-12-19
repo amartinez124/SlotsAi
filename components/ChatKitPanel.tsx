@@ -333,6 +333,12 @@ export function ChatKitPanel({
     },
     onResponseStart: () => {
       setErrorState({ integration: null, retryable: false });
+      
+      // Stop recording when message is sent
+      if (isListening && recognitionRef.current) {
+        recognitionRef.current.stop();
+        setIsListening(false);
+      }
     },
     onThreadChange: () => {
       processedFacts.current.clear();
