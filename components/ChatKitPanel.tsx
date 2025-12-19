@@ -15,7 +15,6 @@ import {
 import { ErrorOverlay } from "./ErrorOverlay";
 import type { ColorScheme } from "@/hooks/useColorScheme";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
-import { useAudioVisualizer } from "@/hooks/useAudioVisualizer";
 import { MicrophoneButton } from "./MicrophoneButton";
 
 export type FactAction = {
@@ -77,9 +76,6 @@ export function ChatKitPanel({
     setErrors((current) => ({ ...current, ...updates }));
   }, []);
 
-  // Audio visualizer hook
-  const { audioData, startVisualization, stopVisualization } = useAudioVisualizer();
-
   // Speech recognition hook
   const {
     isListening,
@@ -99,10 +95,6 @@ export function ChatKitPanel({
     onError: (error) => {
       setVoiceError(error);
       setTimeout(() => setVoiceError(null), 5000);
-    },
-    onStreamReady: (stream) => {
-      // Start audio visualization when stream is ready
-      startVisualization(stream);
     },
     language: SPEECH_RECOGNITION_LANGUAGE,
     continuous: true,
@@ -377,18 +369,22 @@ export function ChatKitPanel({
     },
   });
 
-  // Handle stopping recording and sending message
+  // Handle stopping recording and putting text in composer
   useEffect(() => {
-    if (!isListening && accumulatedTranscript && chatkit.sendUserMessage) {
-      // Send the accumulated transcript to ChatKit
-      chatkit.sendUserMessage({ text: accumulatedTranscript.trim() });
+    if (!isListening && accumulatedTranscript && chatkit.setComposerValue) {
+      // Put the accumulated transcript in the composer input for editing
+      chatkit.setComposerValue({ text: accumulatedTranscript.trim() });
+      
+      // Focus the composer so user can immediately edit or send
+      if (chatkit.focusComposer) {
+        chatkit.focusComposer();
+      }
       
       // Clean up
       setAccumulatedTranscript("");
       setInterimTranscript("");
-      stopVisualization();
     }
-  }, [isListening, accumulatedTranscript, chatkit, stopVisualization]);
+  }, [isListening, accumulatedTranscript, chatkit]);
 
   const activeError = errors.session ?? errors.integration;
   const blockingError = errors.script ?? activeError;
@@ -415,15 +411,14 @@ export function ChatKitPanel({
         }
       />
       
-      {/* Microphone Button with Waveform - Positioned inline with chat composer */}
+      {/* Microphone Button - Positioned to not block attachments */}
       {isSpeechSupported && !blockingError && !isInitializingSession && (
-        <div className="absolute bottom-6 left-6 z-10">
+        <div className="absolute bottom-6 right-6 z-10">
           <MicrophoneButton
             isListening={isListening}
             isSupported={isSpeechSupported}
             onClick={toggleListening}
             interimTranscript={interimTranscript}
-            audioData={audioData}
           />
         </div>
       )}

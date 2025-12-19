@@ -3,7 +3,6 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 interface UseSpeechRecognitionOptions {
   onTranscript: (transcript: string, isFinal: boolean) => void;
   onError?: (error: string) => void;
-  onStreamReady?: (stream: MediaStream) => void;
   language?: string;
   continuous?: boolean;
 }
@@ -11,14 +10,12 @@ interface UseSpeechRecognitionOptions {
 export function useSpeechRecognition({
   onTranscript,
   onError,
-  onStreamReady,
   language = 'en-US',
   continuous = true,
 }: UseSpeechRecognitionOptions) {
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
     // Check browser support
@@ -82,20 +79,12 @@ export function useSpeechRecognition({
       if (recognitionRef.current) {
         recognitionRef.current.stop();
       }
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
     };
   }, [language, continuous, onTranscript, onError]);
 
-  const startListening = useCallback(async () => {
+  const startListening = useCallback(() => {
     if (recognitionRef.current && !isListening) {
       try {
-        // Request microphone access for audio visualization
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        streamRef.current = stream;
-        onStreamReady?.(stream);
-        
         recognitionRef.current.start();
         setIsListening(true);
       } catch (error) {
@@ -103,18 +92,12 @@ export function useSpeechRecognition({
         onError?.('Failed to start speech recognition.');
       }
     }
-  }, [isListening, onError, onStreamReady]);
+  }, [isListening, onError]);
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current && isListening) {
       recognitionRef.current.stop();
       setIsListening(false);
-    }
-    
-    // Clean up media stream
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
     }
   }, [isListening]);
 

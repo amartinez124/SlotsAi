@@ -1,13 +1,10 @@
 'use client';
 
-import { AudioWaveform } from './AudioWaveform';
-
 interface MicrophoneButtonProps {
   isListening: boolean;
   isSupported: boolean;
   onClick: () => void;
   interimTranscript?: string;
-  audioData?: Uint8Array;
 }
 
 export function MicrophoneButton({
@@ -15,7 +12,6 @@ export function MicrophoneButton({
   isSupported,
   onClick,
   interimTranscript,
-  audioData,
 }: MicrophoneButtonProps) {
   if (!isSupported) {
     return null;
@@ -70,19 +66,6 @@ export function MicrophoneButton({
           </svg>
         )}
       </button>
-
-      {/* Waveform Visualization - shown when recording */}
-      {isListening && audioData && audioData.length > 0 && (
-        <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg px-4 py-2 shadow-md">
-          <AudioWaveform
-            audioData={audioData}
-            width={200}
-            height={60}
-            barCount={48}
-            className="rounded"
-          />
-        </div>
-      )}
 
       {/* Interim Transcript Tooltip */}
       {isListening && interimTranscript && (
